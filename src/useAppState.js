@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CATEGORIES, TASK_INDEX, WORKOUT_SPLIT, PRIORITY_QUADRANTS, PRIORITY_STAR_MAP,
   isoDate, dowMon0, addDays, startOfWeek, daysInMonth, thaiDateLabel, THAI_DOW, THAI_MONTHS,
@@ -8,6 +8,17 @@ import {
   GRID_START_HOUR, GRID_END_HOUR, HOUR_PX,
   loadLS, saveLS,
 } from './data';
+import { supabase } from './supabaseClient';
+
+const PERSIST_KEYS = [
+  'overrides', 'customByDate', 'completed', 'exerciseVals', 'timeOverrides',
+  'durationOverrides', 'deletedIids', 'backlogItems', 'notesByIid', 'taskPriority', 'includePriority',
+];
+function pickPersisted(s) {
+  const out = {};
+  PERSIST_KEYS.forEach((k) => { out[k] = s[k]; });
+  return out;
+}
 
 function initialState() {
   return {
@@ -44,9 +55,49 @@ function initialState() {
   };
 }
 
-export function useAppState() {
+export function useAppState(userId) {
   const [state, setState] = useState(initialState);
+  const [syncStatus, setSyncStatus] = useState('idle');
+  const hydratedRef = useRef(false);
+  const saveTimerRef = useRef(null);
   const patch = (updater) => setState((s) => ({ ...s, ...(typeof updater === 'function' ? updater(s) : updater) }));
+
+  useEffect(() => {
+    if (!userId) { hydratedRef.current = false; return; }
+    let cancelled = false;
+    setSyncStatus('loading');
+    supabase.from('app_state').select('state').eq('user_id', userId).maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (!error && data && data.state) {
+          const remote = data.state;
+          patch(() => {
+            const merged = {};
+            PERSIST_KEYS.forEach((k) => {
+              if (remote[k] !== undefined) { merged[k] = remote[k]; saveLS(k, remote[k]); }
+            });
+            return merged;
+          });
+        }
+        hydratedRef.current = true;
+        setSyncStatus('idle');
+      });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const persistedSnapshot = JSON.stringify(pickPersisted(state));
+  useEffect(() => {
+    if (!userId || !hydratedRef.current) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      setSyncStatus('saving');
+      supabase.from('app_state')
+        .upsert({ user_id: userId, state: JSON.parse(persistedSnapshot), updated_at: new Date().toISOString() })
+        .then(({ error }) => setSyncStatus(error ? 'error' : 'saved'));
+    }, 1200);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, persistedSnapshot]);
 
   function toggleInstance(iid) {
     patch((s) => {
@@ -688,9 +739,11 @@ export function useAppState() {
       goPlanner: () => patch({ tab: 'planner' }),
       goPriority: () => patch({ tab: 'priority' }),
       goWorkout: () => patch({ tab: 'workout' }),
+      syncStatus,
+      onLogout: () => supabase.auth.signOut(),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  }, [state, syncStatus]);
 
   return vm;
 }

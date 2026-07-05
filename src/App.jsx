@@ -1,10 +1,15 @@
+import { useEffect, useState } from 'react';
 import { useAppState } from './useAppState';
+import { supabase } from './supabaseClient';
+import AuthScreen from './components/AuthScreen';
 import DashboardView from './components/DashboardView';
 import TodayView from './components/TodayView';
 import CategoriesView from './components/CategoriesView';
 import PlannerView from './components/PlannerView';
 import PriorityView from './components/PriorityView';
 import WorkoutView from './components/WorkoutView';
+
+const SYNC_LABEL = { idle: '', loading: 'ກຳລັງໂຫຼດ...', saving: 'ກຳລັງບັນທຶກ...', saved: 'ບັນທຶກແລ້ວ', error: 'ບັນທຶກບໍ່ສຳເລັດ' };
 
 const navItems = [
   { key: 'dashboard', label: 'ພາບລວມ', go: 'goDashboard', icon: (c) => (
@@ -28,7 +33,22 @@ const navItems = [
 ];
 
 export default function App() {
-  const vm = useAppState();
+  const [session, setSession] = useState(undefined);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
+  const vm = useAppState(session?.user?.id);
+
+  if (session === undefined) {
+    return <div style={{ height: '100vh', width: '100%', background: '#0A0A11' }} />;
+  }
+  if (!session) {
+    return <AuthScreen />;
+  }
 
   return (
     <div style={{ height: '100vh', width: '100%', background: '#0A0A11', display: 'flex', fontFamily: "'Noto Sans Lao',sans-serif", overflow: 'hidden', lineHeight: 1.7 }}>
@@ -50,6 +70,10 @@ export default function App() {
             <span style={{ color: '#F5B942', fontSize: 13.5, fontWeight: 700 }}>{vm.streakDays} ວັນຕິດຕໍ່ກັນ</span>
           </div>
           <div style={{ background: '#1F1F2E', padding: '10px 14px', borderRadius: 14, color: '#9C99AE', fontSize: 12.5, fontWeight: 700 }}>Level {vm.level}</div>
+          {SYNC_LABEL[vm.syncStatus] && (
+            <div style={{ textAlign: 'center', color: vm.syncStatus === 'error' ? '#E8555A' : '#6b6a80', fontSize: 11 }}>{SYNC_LABEL[vm.syncStatus]}</div>
+          )}
+          <div onClick={vm.onLogout} style={{ textAlign: 'center', padding: '8px 14px', borderRadius: 14, color: '#8B899C', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>ອອກຈາກລະບົບ</div>
         </div>
       </div>
 
