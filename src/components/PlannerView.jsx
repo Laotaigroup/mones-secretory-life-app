@@ -1,5 +1,32 @@
 import { useState } from 'react';
 
+const TIME_SELECT_STYLE = {
+  background: '#0F0F17', border: '1px solid rgba(255,255,255,.16)', borderRadius: 7,
+  color: '#F1EFEA', fontSize: 12.5, fontFamily: "'Noto Sans Lao',sans-serif",
+  padding: '7px 3px', outline: 'none', cursor: 'pointer', textAlign: 'center', width: 44, flexShrink: 0,
+};
+const HOURS = Array.from({ length: 24 }, (_, i) => (i < 10 ? '0' + i : '' + i));
+const MINUTE_STEPS = ['00', '15', '30', '45'];
+
+function TimeInput({ value, onChange }) {
+  const [h, m] = (value || '00:00').split(':');
+  const hour = HOURS.includes(h) ? h : '00';
+  const minute = m || '00';
+  const minuteOptions = MINUTE_STEPS.includes(minute) ? MINUTE_STEPS : [...MINUTE_STEPS, minute].sort();
+  const emit = (newH, newM) => onChange({ target: { value: newH + ':' + newM } });
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <select value={hour} onChange={(e) => emit(e.target.value, minute)} style={TIME_SELECT_STYLE}>
+        {HOURS.map((hh) => <option key={hh} value={hh}>{hh}</option>)}
+      </select>
+      <span style={{ color: '#6b6a80', fontSize: 12 }}>:</span>
+      <select value={minute} onChange={(e) => emit(hour, e.target.value)} style={TIME_SELECT_STYLE}>
+        {minuteOptions.map((mm) => <option key={mm} value={mm}>{mm}</option>)}
+      </select>
+    </div>
+  );
+}
+
 export default function PlannerView({ vm }) {
   return (
     <>
@@ -14,9 +41,9 @@ export default function PlannerView({ vm }) {
           </div>
         </div>
 
-        <div style={{ flex: 1, background: '#1B1B29', borderRadius: 14, padding: '10px 12px', minWidth: 280 }}>
+        <div onDragOver={vm.onDragOver} onDrop={vm.onBacklogDrop} style={{ flex: 1, background: '#1B1B29', borderRadius: 14, padding: '10px 12px', minWidth: 280 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ color: '#8B899C', fontSize: 11.5, fontWeight: 700 }}>ວຽກທີ່ຍັງບໍ່ໄດ້ຈັດເວລາ · ລາກໄປວາງໃນຕາຕະລາງ</div>
+            <div style={{ color: '#8B899C', fontSize: 11.5, fontWeight: 700 }}>ວຽກທີ່ຍັງບໍ່ໄດ້ຈັດເວລາ · ລາກໄປວາງໃນຕາຕະລາງ ຫຼື ລາກຈາກຕາຕະລາງມາວາງທີ່ນີ້</div>
             <div onClick={vm.startBacklogAdd} style={{ color: '#F5B942', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+ ເພີ່ມວຽກ</div>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -91,7 +118,7 @@ function DayColumn({ day, vm }) {
           <div onClick={vm.stopProp} style={{ position: 'absolute', left: 2, right: 2, top: day.addingTopPx, background: '#22223A', border: '1px solid rgba(255,255,255,.14)', borderRadius: 10, padding: 8, zIndex: 30, boxShadow: '0 6px 18px rgba(0,0,0,.4)' }}>
             <input value={vm.newTaskName} onChange={vm.onNewTaskNameChange} placeholder="ຊື່ລາຍການ..." style={{ width: '100%', background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 9, padding: '6px 8px', color: '#F1EFEA', fontSize: 12, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
             <div style={{ display: 'flex', gap: 6, marginTop: 7, alignItems: 'center' }}>
-              <input type="time" value={vm.newTaskTime} onChange={vm.onNewTaskTimeChange} style={{ flexShrink: 0, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 9, padding: '5px 6px', color: '#F1EFEA', fontSize: 11.5, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
+              <TimeInput value={vm.newTaskTime} onChange={vm.onNewTaskTimeChange} />
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {vm.catSwatches.map((sw) => (
                   <div key={sw.id} onClick={sw.select} style={{ width: 22, height: 22, borderRadius: '50%', background: sw.color, border: sw.ring, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#14141F', cursor: 'pointer' }}>{sw.letter}</div>
@@ -147,10 +174,15 @@ function Block({ blk }) {
       </div>
       {blk.isEditing && (
         <div onClick={blk.stopProp} style={{ position: 'absolute', left: 0, right: 0, top: blk.innerHeightPx, background: '#1B1B29', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: 8, marginTop: 2, boxShadow: '0 4px 14px rgba(0,0,0,.18)', display: 'flex', flexDirection: 'column', gap: 6, zIndex: 40, pointerEvents: 'auto' }}>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <input type="time" value={blk.timeValue} onChange={blk.onTimeInput} style={{ flex: 1, minWidth: 0, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '4px 5px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
-            <div style={{ color: '#6b6a80', fontSize: 10, flexShrink: 0 }}>ຫາ</div>
-            <input type="time" value={blk.endTimeValue} onChange={blk.onEndTimeInput} style={{ flex: 1, minWidth: 0, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '4px 5px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ color: '#6b6a80', fontSize: 10, width: 28, flexShrink: 0 }}>ເລີ່ມ</div>
+              <TimeInput value={blk.timeValue} onChange={blk.onTimeInput} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ color: '#6b6a80', fontSize: 10, width: 28, flexShrink: 0 }}>ຫາ</div>
+              <TimeInput value={blk.endTimeValue} onChange={blk.onEndTimeInput} />
+            </div>
           </div>
           <input type="date" value={blk.dateValue} onChange={blk.onDateInput} style={{ width: '100%', background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '4px 5px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
           <textarea value={blk.note} onChange={blk.onNoteInput} placeholder="ເພີ່ມລາຍລະອຽດ..." style={{ width: '100%', minHeight: 44, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '5px 6px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none', resize: 'vertical' }} />

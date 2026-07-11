@@ -187,6 +187,42 @@ export function useAppState(userId) {
     });
   }
 
+  function unscheduleInstance(iid, fromDate) {
+    let name, catId;
+    if (iid.indexOf('custom-') === 0) {
+      const item = (state.customByDate[fromDate] || []).find((c) => c.id === iid);
+      if (!item) return;
+      name = item.name; catId = item.catId;
+    } else {
+      const t = TASK_INDEX[iid.slice(11)];
+      if (!t) return;
+      name = t.name; catId = t.catId;
+    }
+    const pq = state.taskPriority[iid];
+    const inclP = !!state.includePriority[iid];
+    deleteInstance(iid);
+    patch((s) => {
+      const backlogItems = s.backlogItems.slice();
+      const id = 'bl-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+      backlogItems.push({ id, name, catId });
+      saveLS('backlogItems', backlogItems);
+      const out = { backlogItems };
+      if (pq) {
+        const taskPriority = { ...s.taskPriority, [id]: pq };
+        delete taskPriority[iid];
+        saveLS('taskPriority', taskPriority);
+        out.taskPriority = taskPriority;
+      }
+      if (inclP) {
+        const includePriority = { ...s.includePriority, [id]: true };
+        delete includePriority[iid];
+        saveLS('includePriority', includePriority);
+        out.includePriority = includePriority;
+      }
+      return out;
+    });
+  }
+
   function setDurationOverride(iid, min) {
     patch((s) => {
       const durationOverrides = { ...s.durationOverrides, [iid]: Math.max(5, min) };
@@ -717,6 +753,13 @@ export function useAppState(userId) {
       hourLabels, gridHeightPx, gridBgImage, freqLegend,
       plannerViewLabels,
       backlogChips, backlogCatSwatches,
+      onBacklogDrop: (e) => {
+        e.preventDefault();
+        try {
+          const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+          if (data.iid && data.fromDate && !data.backlogId) unscheduleInstance(data.iid, data.fromDate);
+        } catch { /* ignore malformed or non-JSON drop payload */ }
+      },
       backlogAdding: state.backlogAdding, backlogClosed: !state.backlogAdding,
       startBacklogAdd: () => patch({ backlogAdding: true, newBacklogName: '', newBacklogCat: 'A' }),
       cancelBacklogAdd: () => patch({ backlogAdding: false }),
