@@ -62,7 +62,14 @@ export default function App() {
     async function ensureSignedIn() {
       try {
         const { data: { session: existing } } = await supabase.auth.getSession();
-        if (existing) { if (!cancelled) setSession(existing); return; }
+        if (existing) {
+          // Don't trust a locally cached session blindly — verify with the server that
+          // this user still actually exists (a stale session pointing at a deleted/
+          // duplicate account would otherwise silently break data loading forever).
+          const { data: { user: verifiedUser } } = await supabase.auth.getUser();
+          if (verifiedUser) { if (!cancelled) setSession(existing); return; }
+          await supabase.auth.signOut();
+        }
         let { data, error } = await supabase.auth.signInWithPassword({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
         let signupAlreadyTried = false;
         try { signupAlreadyTried = localStorage.getItem('authSignupAttempted') === '1'; } catch { /* ignore */ }
