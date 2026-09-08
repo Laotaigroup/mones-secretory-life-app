@@ -50,33 +50,47 @@ export default function App() {
   };
 
   const [authError, setAuthError] = useState(null);
+  const [authAttempt, setAuthAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) setAuthError((e) => e || 'ໃຊ້ເວລານານເກີນໄປ ລອງໃໝ່ອີກຄັ້ງ');
+    }, 12000);
     async function ensureSignedIn() {
-      const { data: { session: existing } } = await supabase.auth.getSession();
-      if (existing) { if (!cancelled) setSession(existing); return; }
-      let { data, error } = await supabase.auth.signInWithPassword({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
-      if (error) {
-        const signup = await supabase.auth.signUp({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
-        data = signup.data;
-        error = signup.error;
+      try {
+        const { data: { session: existing } } = await supabase.auth.getSession();
+        if (existing) { if (!cancelled) setSession(existing); return; }
+        let { data, error } = await supabase.auth.signInWithPassword({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
+        if (error) {
+          const signup = await supabase.auth.signUp({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
+          data = signup.data;
+          error = signup.error;
+        }
+        if (cancelled) return;
+        if (data && data.session) setSession(data.session);
+        else setAuthError((error && error.message) || 'ບໍ່ສາມາດເຂົ້າສູ່ລະບົບອັດຕະໂນມັດໄດ້');
+      } catch (err) {
+        if (!cancelled) setAuthError((err && err.message) || 'ບໍ່ສາມາດເຂົ້າສູ່ລະບົບອັດຕະໂນມັດໄດ້');
       }
-      if (cancelled) return;
-      if (data && data.session) setSession(data.session);
-      else setAuthError((error && error.message) || 'ບໍ່ສາມາດເຂົ້າສູ່ລະບົບອັດຕະໂນມັດໄດ້');
     }
     ensureSignedIn();
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => { if (!cancelled && s) setSession(s); });
-    return () => { cancelled = true; sub.subscription.unsubscribe(); };
-  }, []);
+    return () => { cancelled = true; clearTimeout(timeoutId); sub.subscription.unsubscribe(); };
+  }, [authAttempt]);
 
   const vm = useAppState(session?.user?.id);
 
   if (session === undefined) {
     return (
-      <div style={{ height: '100vh', width: '100%', background: '#0A0A11', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B899C', fontFamily: "'Noto Sans Lao',sans-serif", fontSize: 13, textAlign: 'center', padding: 20 }}>
-        {authError || ''}
+      <div style={{ height: '100vh', width: '100%', background: '#0A0A11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, color: '#8B899C', fontFamily: "'Noto Sans Lao',sans-serif", fontSize: 13, textAlign: 'center', padding: 20 }}>
+        <div>{authError || 'ກຳລັງໂຫຼດ...'}</div>
+        {authError && (
+          <div
+            onClick={() => { setAuthError(null); setAuthAttempt((a) => a + 1); }}
+            style={{ padding: '8px 20px', borderRadius: 10, background: '#F5B942', color: '#14141F', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+          >ລອງໃໝ່</div>
+        )}
       </div>
     );
   }
