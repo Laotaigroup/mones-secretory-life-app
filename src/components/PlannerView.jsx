@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const TIME_SELECT_STYLE = {
   background: '#0F0F17', border: '1px solid rgba(255,255,255,.16)', borderRadius: 7,
@@ -142,6 +142,12 @@ function DayColumn({ day, vm }) {
 
 function Block({ blk }) {
   const [hover, setHover] = useState(false);
+  const [pendingDate, setPendingDate] = useState(blk.dateValue);
+  useEffect(() => { if (blk.isEditing) setPendingDate(blk.dateValue); }, [blk.isEditing, blk.dateValue]);
+  const commitAndClose = (e) => {
+    if (pendingDate && pendingDate !== blk.dateValue) blk.onDateInput({ target: { value: pendingDate } });
+    blk.closeEdit(e);
+  };
   return (
     <div style={{ position: 'absolute', left: blk.leftPx, right: blk.rightPx, top: blk.topPx, height: blk.maxHeightPx, zIndex: blk.zIndex, pointerEvents: 'none' }}>
       <div
@@ -184,11 +190,11 @@ function Block({ blk }) {
               <TimeInput value={blk.endTimeValue} onChange={blk.onEndTimeInput} />
             </div>
           </div>
-          <input type="date" value={blk.dateValue} onChange={blk.onDateInput} style={{ width: '100%', background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '4px 5px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
+          <input type="date" value={pendingDate} onChange={(e) => setPendingDate(e.target.value)} style={{ width: '100%', background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '4px 5px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
           <textarea value={blk.note} onChange={blk.onNoteInput} placeholder="ເພີ່ມລາຍລະອຽດ..." style={{ width: '100%', minHeight: 44, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '5px 6px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none', resize: 'vertical' }} />
           <div style={{ display: 'flex', gap: 6 }}>
             <div onClick={blk.deleteBlock} style={{ textAlign: 'center', padding: '5px 10px', borderRadius: 7, background: 'rgba(232,85,90,.16)', color: '#E8555A', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ລຶບ</div>
-            <div onClick={blk.closeEdit} style={{ flex: 1, textAlign: 'center', padding: 5, borderRadius: 7, background: '#F5B942', color: '#14141F', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ສຳເລັດ</div>
+            <div onClick={commitAndClose} style={{ flex: 1, textAlign: 'center', padding: 5, borderRadius: 7, background: '#F5B942', color: '#14141F', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ສຳເລັດ</div>
           </div>
         </div>
       )}

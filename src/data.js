@@ -55,7 +55,6 @@ export const CATEGORIES = [
     ] },
   { id: 'C', letter: 'C', name: 'ພັດທະນາໂປຣແກຣມ', sub: 'ທຸລະກິດບໍລິສັດ', color: '#4EA1F7', note: 'ເວລາເຮັດວຽກ',
     tasks: [
-      { id: 'c1', name: 'ອອກແບບ/ພັດທະນາໂປຣແກຣມບໍລິສັດ', detail: '1 ຊມ.', freq: 'weekday', time: '12:00', durationMin: 60 },
       { id: 'c2', name: 'ເຮັດວຽກ (ອອຟິດ)', detail: '6 ວັນ/ອາທິດ · 8:00–17:00', freq: 'weeklyDays', days: [0, 1, 2, 3, 4, 5], time: '08:00', durationMin: 540, isBand: true },
     ] },
   { id: 'E', letter: 'E', name: 'ການໃຫ້', sub: 'ຄວາມໝາຍຂອງຊີວິດ', color: '#F5B942', note: '',

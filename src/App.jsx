@@ -34,6 +34,16 @@ const navItems = [
 
 export default function App() {
   const [session, setSession] = useState(undefined);
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('sidebarCollapsed') === '1'; } catch { return false; }
+  });
+  const toggleCollapsed = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try { localStorage.setItem('sidebarCollapsed', next ? '1' : '0'); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -52,28 +62,49 @@ export default function App() {
 
   return (
     <div style={{ height: '100vh', width: '100%', background: '#0A0A11', display: 'flex', fontFamily: "'Noto Sans Lao',sans-serif", overflow: 'hidden', lineHeight: 1.7 }}>
-      <div style={{ width: 246, flexShrink: 0, background: '#14141F', borderRight: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column', padding: '22px 14px' }}>
-        <div style={{ fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, fontSize: 16.5, color: '#F1EFEA', letterSpacing: '.01em', padding: '2px 10px 22px' }}>Mone's Secretory</div>
+      <div style={{ width: collapsed ? 72 : 246, flexShrink: 0, background: '#14141F', borderRight: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column', padding: collapsed ? '22px 10px' : '22px 14px', position: 'relative', transition: 'width .18s ease, padding .18s ease' }}>
+        <div
+          onClick={toggleCollapsed}
+          title={collapsed ? 'ຂະຫຍາຍ' : 'ຫຍໍ້'}
+          style={{ position: 'absolute', top: 26, right: -12, width: 24, height: 24, borderRadius: '50%', background: '#1F1F2E', border: '1px solid rgba(255,255,255,.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 5 }}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" style={{ transform: collapsed ? 'rotate(180deg)' : 'none' }}>
+            <path d="M15 4l-8 8 8 8" stroke="#8B899C" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        {!collapsed && (
+          <div style={{ fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, fontSize: 16.5, color: '#F1EFEA', letterSpacing: '.01em', padding: '2px 10px 22px', whiteSpace: 'nowrap', overflow: 'hidden' }}>Mone's Secretory</div>
+        )}
+        {collapsed && (
+          <div style={{ fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, fontSize: 16.5, color: '#F1EFEA', textAlign: 'center', padding: '2px 0 22px' }}>M</div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {navItems.map((item) => (
-            <div key={item.key} onClick={vm[item.go]} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', borderRadius: 12, cursor: 'pointer', background: vm.navBg[item.key] }}>
+            <div key={item.key} onClick={vm[item.go]} title={collapsed ? item.label : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 11, padding: collapsed ? '10px' : '10px 12px', borderRadius: 12, cursor: 'pointer', background: vm.navBg[item.key] }}>
               {item.icon(vm.navColors[item.key])}
-              <div style={{ color: vm.navColors[item.key], fontSize: item.fontSize || 13.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{item.label}</div>
+              {!collapsed && <div style={{ color: vm.navColors[item.key], fontSize: item.fontSize || 13.5, fontWeight: 600, whiteSpace: 'nowrap' }}>{item.label}</div>}
             </div>
           ))}
         </div>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#1F1F2E', padding: '10px 14px', borderRadius: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-start', gap: 8, background: '#1F1F2E', padding: collapsed ? '10px' : '10px 14px', borderRadius: 14 }} title={collapsed ? vm.streakDays + ' ວັນຕິດຕໍ່ກັນ' : undefined}>
             <span style={{ fontSize: 16, animation: 'flamePulse 1.6s ease-in-out infinite' }}>🔥</span>
-            <span style={{ color: '#F5B942', fontSize: 13.5, fontWeight: 700 }}>{vm.streakDays} ວັນຕິດຕໍ່ກັນ</span>
+            {!collapsed && <span style={{ color: '#F5B942', fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap' }}>{vm.streakDays} ວັນຕິດຕໍ່ກັນ</span>}
           </div>
-          <div style={{ background: '#1F1F2E', padding: '10px 14px', borderRadius: 14, color: '#9C99AE', fontSize: 12.5, fontWeight: 700 }}>Level {vm.level}</div>
-          {SYNC_LABEL[vm.syncStatus] && (
+          <div style={{ background: '#1F1F2E', padding: collapsed ? '10px' : '10px 14px', borderRadius: 14, color: '#9C99AE', fontSize: 12.5, fontWeight: 700, textAlign: collapsed ? 'center' : 'left' }} title={collapsed ? 'Level ' + vm.level : undefined}>
+            {collapsed ? vm.level : 'Level ' + vm.level}
+          </div>
+          {!collapsed && SYNC_LABEL[vm.syncStatus] && (
             <div style={{ textAlign: 'center', color: vm.syncStatus === 'error' ? '#E8555A' : '#6b6a80', fontSize: 11 }}>{SYNC_LABEL[vm.syncStatus]}</div>
           )}
-          <div onClick={vm.onLogout} style={{ textAlign: 'center', padding: '8px 14px', borderRadius: 14, color: '#8B899C', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>ອອກຈາກລະບົບ</div>
+          <div onClick={vm.onLogout} title={collapsed ? 'ອອກຈາກລະບົບ' : undefined} style={{ textAlign: 'center', padding: collapsed ? '8px' : '8px 14px', borderRadius: 14, color: '#8B899C', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            {collapsed ? (
+              <svg width="15" height="15" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /><path d="M16 17l5-5-5-5M21 12H9" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            ) : 'ອອກຈາກລະບົບ'}
+          </div>
         </div>
       </div>
 
