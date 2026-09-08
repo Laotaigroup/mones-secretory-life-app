@@ -62,7 +62,10 @@ export default function App() {
         const { data: { session: existing } } = await supabase.auth.getSession();
         if (existing) { if (!cancelled) setSession(existing); return; }
         let { data, error } = await supabase.auth.signInWithPassword({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
-        if (error) {
+        let signupAlreadyTried = false;
+        try { signupAlreadyTried = localStorage.getItem('authSignupAttempted') === '1'; } catch { /* ignore */ }
+        if (error && !signupAlreadyTried) {
+          try { localStorage.setItem('authSignupAttempted', '1'); } catch { /* ignore */ }
           const signup = await supabase.auth.signUp({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
           data = signup.data;
           error = signup.error;
