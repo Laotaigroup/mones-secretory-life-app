@@ -109,8 +109,26 @@ export default function App() {
       </div>
 
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <div style={{ padding: '26px 40px 18px', borderBottom: '1px solid rgba(255,255,255,.06)', flexShrink: 0 }}>
-          <div style={{ fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, fontSize: 23, color: '#F1EFEA', letterSpacing: '.01em' }}>{vm.tabTitle}</div>
+        <div style={{ padding: '26px 40px 18px', borderBottom: '1px solid rgba(255,255,255,.06)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, fontSize: 23, color: '#F1EFEA', letterSpacing: '.01em', flexShrink: 0 }}>{vm.tabTitle}</div>
+          {vm.tabIsPlanner && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div onClick={vm.prevWeek} style={{ width: 32, height: 32, borderRadius: 10, background: '#1B1B29', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                  <svg width="7" height="12" viewBox="0 0 7 12"><path d="M6 1L1 6l5 5" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+                <div style={{ color: '#9C99AE', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{vm.plannerWeekLabel}</div>
+                <div onClick={vm.nextWeek} style={{ width: 32, height: 32, borderRadius: 10, background: '#1B1B29', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                  <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </div>
+              </div>
+              <div style={{ display: 'flex', background: '#1F1F2E', borderRadius: 100, padding: 4 }}>
+                {vm.plannerViewLabels.map((pvl) => (
+                  <div key={pvl.id} onClick={pvl.select} style={{ textAlign: 'center', padding: '7px 14px', borderRadius: 100, background: pvl.bg, color: pvl.color, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>{pvl.label}</div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px 40px 40px' }}>

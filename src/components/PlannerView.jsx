@@ -30,17 +30,7 @@ function TimeInput({ value, onChange }) {
 export default function PlannerView({ vm }) {
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14, gap: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <div onClick={vm.prevWeek} style={{ width: 32, height: 32, borderRadius: 10, background: '#1B1B29', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-            <svg width="7" height="12" viewBox="0 0 7 12"><path d="M6 1L1 6l5 5" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
-          <div style={{ color: '#9C99AE', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>{vm.plannerWeekLabel}</div>
-          <div onClick={vm.nextWeek} style={{ width: 32, height: 32, borderRadius: 10, background: '#1B1B29', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-            <svg width="7" height="12" viewBox="0 0 7 12"><path d="M1 1l5 5-5 5" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          </div>
-        </div>
-
+      <div style={{ display: 'flex', alignItems: 'stretch', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
         <div onDragOver={vm.onDragOver} onDrop={vm.onBacklogDrop} style={{ flex: 1, background: '#1B1B29', borderRadius: 14, padding: '10px 12px', minWidth: 280 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <div style={{ color: '#8B899C', fontSize: 11.5, fontWeight: 700 }}>ວຽກທີ່ຍັງບໍ່ໄດ້ຈັດເວລາ · ລາກໄປວາງໃນຕາຕະລາງ ຫຼື ລາກຈາກຕາຕະລາງມາວາງທີ່ນີ້</div>
@@ -67,21 +57,15 @@ export default function PlannerView({ vm }) {
             </div>
           )}
         </div>
-      </div>
 
-      <div style={{ display: 'flex', background: '#1F1F2E', borderRadius: 100, padding: 4, marginBottom: 14, maxWidth: 280 }}>
-        {vm.plannerViewLabels.map((pvl) => (
-          <div key={pvl.id} onClick={pvl.select} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 100, background: pvl.bg, color: pvl.color, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{pvl.label}</div>
-        ))}
-      </div>
-
-      <div style={{ display: 'flex', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
-        {vm.freqLegend.map((lg, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 3, background: lg.color, flexShrink: 0 }} />
-            <div style={{ color: '#8B899C', fontSize: 12 }}>{lg.label}</div>
-          </div>
-        ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flexShrink: 0, justifyContent: 'center', minWidth: 130 }}>
+          {vm.freqLegend.map((lg, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 10, height: 10, borderRadius: 3, background: lg.color, flexShrink: 0 }} />
+              <div style={{ color: '#8B899C', fontSize: 12, whiteSpace: 'nowrap' }}>{lg.label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div style={{ color: '#6b6a80', fontSize: 12, marginBottom: 10 }}>ລາກລາຍການໄປວາງໃນວັນອື່ນໄດ້ເລີຍ · ສີຈາງເມື່ອເຮັດແລ້ວ</div>
