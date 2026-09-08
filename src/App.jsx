@@ -14,7 +14,7 @@ const SYNC_LABEL = { idle: '', loading: 'ກຳລັງໂຫຼດ...', saving
 // Single shared account the app signs into automatically so there's no login screen.
 // Every device that opens this app uses this same account, which is how data syncs across them.
 const APP_ACCOUNT_EMAIL = 'mone.secretory.app@monelife.internal';
-const APP_ACCOUNT_PASSWORD = 'ip2cBXXZphmeM02VbjrretVx';
+const APP_ACCOUNT_PASSWORD = 'MONEtwo03';
 
 const navItems = [
   { key: 'dashboard', label: 'ພາບລວມ', go: 'goDashboard', icon: (c) => (
