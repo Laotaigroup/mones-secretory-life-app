@@ -783,7 +783,6 @@ export function useAppState(userId) {
       goPriority: () => patch({ tab: 'priority' }),
       goWorkout: () => patch({ tab: 'workout' }),
       syncStatus,
-      onLogout: () => supabase.auth.signOut(),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, syncStatus]);

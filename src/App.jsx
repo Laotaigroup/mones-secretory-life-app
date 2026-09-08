@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppState } from './useAppState';
 import { supabase } from './supabaseClient';
-import AuthScreen from './components/AuthScreen';
 import DashboardView from './components/DashboardView';
 import TodayView from './components/TodayView';
 import CategoriesView from './components/CategoriesView';
@@ -10,6 +9,11 @@ import PriorityView from './components/PriorityView';
 import WorkoutView from './components/WorkoutView';
 
 const SYNC_LABEL = { idle: '', loading: 'ກຳລັງໂຫຼດ...', saving: 'ກຳລັງບັນທຶກ...', saved: 'ບັນທຶກແລ້ວ', error: 'ບັນທຶກບໍ່ສຳເລັດ' };
+
+// Single shared account the app signs into automatically so there's no login screen.
+// Every device that opens this app uses this same account, which is how data syncs across them.
+const APP_ACCOUNT_EMAIL = 'mone.secretory.app@monelife.internal';
+const APP_ACCOUNT_PASSWORD = 'ip2cBXXZphmeM02VbjrretVx';
 
 const navItems = [
   { key: 'dashboard', label: 'ພາບລວມ', go: 'goDashboard', icon: (c) => (
@@ -45,19 +49,36 @@ export default function App() {
     });
   };
 
+  const [authError, setAuthError] = useState(null);
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
-    return () => sub.subscription.unsubscribe();
+    let cancelled = false;
+    async function ensureSignedIn() {
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing) { if (!cancelled) setSession(existing); return; }
+      let { data, error } = await supabase.auth.signInWithPassword({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
+      if (error) {
+        const signup = await supabase.auth.signUp({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
+        data = signup.data;
+        error = signup.error;
+      }
+      if (cancelled) return;
+      if (data && data.session) setSession(data.session);
+      else setAuthError((error && error.message) || 'ບໍ່ສາມາດເຂົ້າສູ່ລະບົບອັດຕະໂນມັດໄດ້');
+    }
+    ensureSignedIn();
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => { if (!cancelled && s) setSession(s); });
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, []);
 
   const vm = useAppState(session?.user?.id);
 
   if (session === undefined) {
-    return <div style={{ height: '100vh', width: '100%', background: '#0A0A11' }} />;
-  }
-  if (!session) {
-    return <AuthScreen />;
+    return (
+      <div style={{ height: '100vh', width: '100%', background: '#0A0A11', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8B899C', fontFamily: "'Noto Sans Lao',sans-serif", fontSize: 13, textAlign: 'center', padding: 20 }}>
+        {authError || ''}
+      </div>
+    );
   }
 
   return (
@@ -100,11 +121,6 @@ export default function App() {
           {!collapsed && SYNC_LABEL[vm.syncStatus] && (
             <div style={{ textAlign: 'center', color: vm.syncStatus === 'error' ? '#E8555A' : '#6b6a80', fontSize: 11 }}>{SYNC_LABEL[vm.syncStatus]}</div>
           )}
-          <div onClick={vm.onLogout} title={collapsed ? 'ອອກຈາກລະບົບ' : undefined} style={{ textAlign: 'center', padding: collapsed ? '8px' : '8px 14px', borderRadius: 14, color: '#8B899C', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            {collapsed ? (
-              <svg width="15" height="15" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /><path d="M16 17l5-5-5-5M21 12H9" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            ) : 'ອອກຈາກລະບົບ'}
-          </div>
         </div>
       </div>
 
