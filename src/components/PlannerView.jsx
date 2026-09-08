@@ -28,49 +28,75 @@ function TimeInput({ value, onChange }) {
 }
 
 export default function PlannerView({ vm }) {
+  const [backlogCollapsed, setBacklogCollapsed] = useState(() => {
+    try { return localStorage.getItem('plannerBacklogCollapsed') === '1'; } catch { return false; }
+  });
+  const toggleBacklogCollapsed = () => {
+    setBacklogCollapsed((c) => {
+      const next = !c;
+      try { localStorage.setItem('plannerBacklogCollapsed', next ? '1' : '0'); } catch { /* ignore */ }
+      return next;
+    });
+  };
+  const collapseArrow = (
+    <div onClick={toggleBacklogCollapsed} title={backlogCollapsed ? 'ຂະຫຍາຍ' : 'ພັບເກັບ'} style={{ width: 22, height: 22, borderRadius: 7, background: 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+      <svg width="10" height="10" viewBox="0 0 24 24" style={{ transform: backlogCollapsed ? 'rotate(180deg)' : 'none' }}>
+        <path d="M6 9l6 6 6-6" stroke="#8B899C" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
+  );
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'stretch', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
         <div onDragOver={vm.onDragOver} onDrop={vm.onBacklogDrop} style={{ flex: 1, background: '#1B1B29', borderRadius: 14, padding: '10px 12px', minWidth: 280 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div style={{ color: '#8B899C', fontSize: 11.5, fontWeight: 700 }}>ວຽກທີ່ຍັງບໍ່ໄດ້ຈັດເວລາ · ລາກໄປວາງໃນຕາຕະລາງ ຫຼື ລາກຈາກຕາຕະລາງມາວາງທີ່ນີ້</div>
-            <div onClick={vm.startBacklogAdd} style={{ color: '#F5B942', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+ ເພີ່ມວຽກ</div>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {vm.backlogChips.map((bc) => (
-              <div key={bc.id} draggable onDragStart={bc.dragStart} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.06)', borderRadius: 100, padding: '5px 8px 5px 10px', cursor: 'grab' }}>
-                <div style={{ width: 7, height: 7, borderRadius: '50%', background: bc.color, flexShrink: 0 }} />
-                <div style={{ color: '#F1EFEA', fontSize: 12, fontWeight: 500 }}>{bc.name}</div>
-                {bc.hasStars && <div style={{ color: bc.starColor, fontSize: 10, letterSpacing: 1 }}>{bc.starLabel}</div>}
-                <div onClick={bc.removeSelf} style={{ color: '#8B899C', fontSize: 12, cursor: 'pointer', padding: '0 2px' }}>✕</div>
-              </div>
-            ))}
-          </div>
-          {vm.backlogAdding && (
-            <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-              <input value={vm.newBacklogName} onChange={vm.onNewBacklogNameChange} placeholder="ຊື່ວຽກ..." style={{ flex: 1, minWidth: 120, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '5px 8px', color: '#F1EFEA', fontSize: 12, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
-              {vm.backlogCatSwatches.map((sw) => (
-                <div key={sw.id} onClick={sw.select} style={{ width: 20, height: 20, borderRadius: '50%', background: sw.color, border: sw.ring, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 700, color: '#14141F', cursor: 'pointer' }}>{sw.letter}</div>
-              ))}
-              <div onClick={vm.cancelBacklogAdd} style={{ padding: '5px 9px', borderRadius: 8, background: 'rgba(255,255,255,.06)', color: '#9C99AE', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>ຍົກເລີກ</div>
-              <div onClick={vm.submitBacklogAdd} style={{ padding: '5px 9px', borderRadius: 8, background: '#F5B942', color: '#14141F', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>ເພີ່ມ</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: backlogCollapsed ? 0 : 8 }}>
+            <div style={{ color: '#8B899C', fontSize: 11.5, fontWeight: 700 }}>ວຽກທີ່ຍັງບໍ່ໄດ້ຈັດເວລາ{backlogCollapsed ? ` (${vm.backlogChips.length})` : ' · ລາກໄປວາງໃນຕາຕະລາງ ຫຼື ລາກຈາກຕາຕະລາງມາວາງທີ່ນີ້'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              {!backlogCollapsed && <div onClick={vm.startBacklogAdd} style={{ color: '#F5B942', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>+ ເພີ່ມວຽກ</div>}
+              {collapseArrow}
             </div>
+          </div>
+          {!backlogCollapsed && (
+            <>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {vm.backlogChips.map((bc) => (
+                  <div key={bc.id} draggable onDragStart={bc.dragStart} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,.06)', borderRadius: 100, padding: '5px 8px 5px 10px', cursor: 'grab' }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: bc.color, flexShrink: 0 }} />
+                    <div style={{ color: '#F1EFEA', fontSize: 12, fontWeight: 500 }}>{bc.name}</div>
+                    {bc.hasStars && <div style={{ color: bc.starColor, fontSize: 10, letterSpacing: 1 }}>{bc.starLabel}</div>}
+                    <div onClick={bc.removeSelf} style={{ color: '#8B899C', fontSize: 12, cursor: 'pointer', padding: '0 2px' }}>✕</div>
+                  </div>
+                ))}
+              </div>
+              {vm.backlogAdding && (
+                <div style={{ marginTop: 8, display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input value={vm.newBacklogName} onChange={vm.onNewBacklogNameChange} placeholder="ຊື່ວຽກ..." style={{ flex: 1, minWidth: 120, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '5px 8px', color: '#F1EFEA', fontSize: 12, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
+                  {vm.backlogCatSwatches.map((sw) => (
+                    <div key={sw.id} onClick={sw.select} style={{ width: 20, height: 20, borderRadius: '50%', background: sw.color, border: sw.ring, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9.5, fontWeight: 700, color: '#14141F', cursor: 'pointer' }}>{sw.letter}</div>
+                  ))}
+                  <div onClick={vm.cancelBacklogAdd} style={{ padding: '5px 9px', borderRadius: 8, background: 'rgba(255,255,255,.06)', color: '#9C99AE', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}>ຍົກເລີກ</div>
+                  <div onClick={vm.submitBacklogAdd} style={{ padding: '5px 9px', borderRadius: 8, background: '#F5B942', color: '#14141F', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}>ເພີ່ມ</div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flexShrink: 0, justifyContent: 'center', minWidth: 130 }}>
-          {vm.freqLegend.map((lg, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 10, height: 10, borderRadius: 3, background: lg.color, flexShrink: 0 }} />
-              <div style={{ color: '#8B899C', fontSize: 12, whiteSpace: 'nowrap' }}>{lg.label}</div>
-            </div>
-          ))}
-        </div>
+        {!backlogCollapsed && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7, flexShrink: 0, justifyContent: 'center', minWidth: 130 }}>
+            {vm.freqLegend.map((lg, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 10, height: 10, borderRadius: 3, background: lg.color, flexShrink: 0 }} />
+                <div style={{ color: '#8B899C', fontSize: 12, whiteSpace: 'nowrap' }}>{lg.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={{ color: '#6b6a80', fontSize: 12, marginBottom: 10 }}>ລາກລາຍການໄປວາງໃນວັນອື່ນໄດ້ເລີຍ · ສີຈາງເມື່ອເຮັດແລ້ວ</div>
 
-      <div style={{ display: 'flex', overflowX: 'auto', paddingBottom: 12 }}>
+      <div style={{ display: 'flex', overflow: 'auto', paddingBottom: 12, maxHeight: '65vh' }}>
         <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, width: 50, position: 'relative', height: vm.gridHeightPx, marginTop: 46 }}>
           {vm.hourLabels.map((hl, i) => (
             <div key={i} style={{ position: 'absolute', top: hl.topPx, left: 0, right: 8, textAlign: 'right', color: '#54536b', fontSize: 11, transform: 'translateY(-6px)' }}>{hl.label}</div>
@@ -89,7 +115,7 @@ export default function PlannerView({ vm }) {
 function DayColumn({ day, vm }) {
   return (
     <div style={{ flex: 1, minWidth: 120 }}>
-      <div style={{ textAlign: 'center', padding: '6px 4px', borderRadius: 10, background: day.headerBg, marginBottom: 6 }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 6, textAlign: 'center', padding: '6px 4px', borderRadius: 10, background: day.headerBg === 'transparent' ? '#0A0A11' : day.headerBg, marginBottom: 6 }}>
         <div style={{ color: day.headerColor, fontSize: 13, fontWeight: 700 }}>{day.dayName}</div>
         <div style={{ color: '#6b6a80', fontSize: 11 }}>{day.dateLabel}</div>
       </div>
