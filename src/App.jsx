@@ -131,7 +131,7 @@ export default function App() {
           )}
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px 40px 40px' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: vm.tabIsPlanner ? 'hidden' : 'auto', padding: '24px 40px 40px', display: 'flex', flexDirection: 'column' }}>
           {vm.tabIsDashboard && <DashboardView vm={vm} />}
           {vm.tabIsToday && <TodayView vm={vm} />}
           {vm.tabIsCategories && <CategoriesView vm={vm} />}

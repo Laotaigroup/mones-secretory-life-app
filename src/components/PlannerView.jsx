@@ -96,13 +96,13 @@ export default function PlannerView({ vm }) {
 
       <div style={{ color: '#6b6a80', fontSize: 12, marginBottom: 10 }}>ລາກລາຍການໄປວາງໃນວັນອື່ນໄດ້ເລີຍ · ສີຈາງເມື່ອເຮັດແລ້ວ</div>
 
-      <div style={{ display: 'flex', overflow: 'auto', paddingBottom: 12, maxHeight: '65vh' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', overflow: 'auto', paddingBottom: 12, flex: '1 1 auto', minHeight: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, width: 50, position: 'relative', height: vm.gridHeightPx, marginTop: 46 }}>
           {vm.hourLabels.map((hl, i) => (
             <div key={i} style={{ position: 'absolute', top: hl.topPx, left: 0, right: 8, textAlign: 'right', color: '#54536b', fontSize: 11, transform: 'translateY(-6px)' }}>{hl.label}</div>
           ))}
         </div>
-        <div style={{ display: 'flex', flex: 1, minWidth: 980, gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', flex: 1, minWidth: 980, gap: 6 }}>
           {vm.calendarDays.map((day) => (
             <DayColumn key={day.iso} day={day} vm={vm} />
           ))}
