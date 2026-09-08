@@ -70,15 +70,11 @@ export default function App() {
           if (verifiedUser) { if (!cancelled) setSession(existing); return; }
           await supabase.auth.signOut();
         }
-        let { data, error } = await supabase.auth.signInWithPassword({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
-        let signupAlreadyTried = false;
-        try { signupAlreadyTried = localStorage.getItem('authSignupAttempted') === '1'; } catch { /* ignore */ }
-        if (error && !signupAlreadyTried) {
-          try { localStorage.setItem('authSignupAttempted', '1'); } catch { /* ignore */ }
-          const signup = await supabase.auth.signUp({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
-          data = signup.data;
-          error = signup.error;
-        }
+        // Sign in only — never auto-create the account here. The account is
+        // provisioned once, up front (see README); a client-side fallback to
+        // signUp() on any sign-in failure was what caused duplicate accounts
+        // (and split data) across devices in the first place.
+        const { data, error } = await supabase.auth.signInWithPassword({ email: APP_ACCOUNT_EMAIL, password: APP_ACCOUNT_PASSWORD });
         if (cancelled) return;
         if (data && data.session) setSession(data.session);
         else setAuthError((error && error.message) || 'ບໍ່ສາມາດເຂົ້າສູ່ລະບົບອັດຕະໂນມັດໄດ້');
