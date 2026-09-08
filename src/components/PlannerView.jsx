@@ -27,7 +27,7 @@ function TimeInput({ value, onChange }) {
   );
 }
 
-export default function PlannerView({ vm }) {
+export default function PlannerView({ vm, isMobile }) {
   const [backlogCollapsed, setBacklogCollapsed] = useState(() => {
     try { return localStorage.getItem('plannerBacklogCollapsed') === '1'; } catch { return false; }
   });
@@ -104,7 +104,7 @@ export default function PlannerView({ vm }) {
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', flex: 1, minWidth: 980, gap: 6 }}>
           {vm.calendarDays.map((day) => (
-            <DayColumn key={day.iso} day={day} vm={vm} />
+            <DayColumn key={day.iso} day={day} vm={vm} isMobile={isMobile} />
           ))}
         </div>
       </div>
@@ -112,7 +112,7 @@ export default function PlannerView({ vm }) {
   );
 }
 
-function DayColumn({ day, vm }) {
+function DayColumn({ day, vm, isMobile }) {
   return (
     <div style={{ flex: 1, minWidth: 120 }}>
       <div style={{ position: 'sticky', top: 0, zIndex: 6, textAlign: 'center', padding: '6px 4px', borderRadius: 10, background: day.headerBg === 'transparent' ? '#0A0A11' : day.headerBg, marginBottom: 6 }}>
@@ -121,7 +121,7 @@ function DayColumn({ day, vm }) {
       </div>
       <div onDragOver={vm.onDragOver} onDrop={day.onDrop} onClick={day.onGridClick} style={{ position: 'relative', height: vm.gridHeightPx, background: '#1B1B29', borderRadius: 10, backgroundImage: vm.gridBgImage, cursor: 'pointer' }}>
         {day.blocks.map((blk) => (
-          <Block key={blk.iid} blk={blk} />
+          <Block key={blk.iid} blk={blk} isMobile={isMobile} />
         ))}
 
         {day.addOpen && (
@@ -150,7 +150,7 @@ function DayColumn({ day, vm }) {
   );
 }
 
-function Block({ blk }) {
+function Block({ blk, isMobile }) {
   const [hover, setHover] = useState(false);
   const [pendingDate, setPendingDate] = useState(blk.dateValue);
   useEffect(() => { if (blk.isEditing) setPendingDate(blk.dateValue); }, [blk.isEditing, blk.dateValue]);
@@ -171,9 +171,9 @@ function Block({ blk }) {
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4 }}>
           <div style={{ color: '#F1EFEA', fontSize: 11.5, fontWeight: 600, textDecoration: blk.decoration, opacity: blk.textOpacity, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', wordBreak: 'break-word' }}>{blk.name}</div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-            {hover && (
-              <div onClick={blk.openEdit} style={{ width: 16, height: 16, borderRadius: 5, background: 'rgba(255,255,255,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                <svg width="9" height="9" viewBox="0 0 24 24"><path d="M12 20h9" stroke="#17161C" strokeWidth="2.4" strokeLinecap="round" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" stroke="#17161C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            {(hover || isMobile) && (
+              <div onClick={blk.openEdit} style={{ width: isMobile ? 22 : 16, height: isMobile ? 22 : 16, borderRadius: 5, background: 'rgba(255,255,255,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <svg width={isMobile ? 12 : 9} height={isMobile ? 12 : 9} viewBox="0 0 24 24"><path d="M12 20h9" stroke="#17161C" strokeWidth="2.4" strokeLinecap="round" /><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z" stroke="#17161C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
               </div>
             )}
             {blk.hasStars && <div style={{ color: blk.starColor, fontSize: 9, letterSpacing: 1, lineHeight: 1, whiteSpace: 'nowrap' }}>{blk.starLabel}</div>}
@@ -202,9 +202,12 @@ function Block({ blk }) {
           </div>
           <input type="date" value={pendingDate} onChange={(e) => setPendingDate(e.target.value)} style={{ width: '100%', background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '4px 5px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none' }} />
           <textarea value={blk.note} onChange={blk.onNoteInput} placeholder="ເພີ່ມລາຍລະອຽດ..." style={{ width: '100%', minHeight: 44, background: '#0F0F17', border: '1px solid rgba(255,255,255,.1)', borderRadius: 7, padding: '5px 6px', color: '#F1EFEA', fontSize: 11, fontFamily: "'Noto Sans Lao',sans-serif", outline: 'none', resize: 'vertical' }} />
-          <div style={{ display: 'flex', gap: 6 }}>
-            <div onClick={blk.deleteBlock} style={{ textAlign: 'center', padding: '5px 10px', borderRadius: 7, background: 'rgba(232,85,90,.16)', color: '#E8555A', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ລຶບ</div>
-            <div onClick={commitAndClose} style={{ flex: 1, textAlign: 'center', padding: 5, borderRadius: 7, background: '#F5B942', color: '#14141F', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ສຳເລັດ</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <div onClick={blk.deleteBlock} style={{ flex: 1, textAlign: 'center', padding: '5px 6px', borderRadius: 7, background: 'rgba(232,85,90,.16)', color: '#E8555A', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ລຶບ</div>
+              <div onClick={blk.unscheduleBlock} style={{ flex: 1, textAlign: 'center', padding: '5px 6px', borderRadius: 7, background: 'rgba(255,255,255,.06)', color: '#9C99AE', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ຍ້າຍໄປບໍ່ຈັດເວລາ</div>
+            </div>
+            <div onClick={commitAndClose} style={{ textAlign: 'center', padding: 5, borderRadius: 7, background: '#F5B942', color: '#14141F', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>ສຳເລັດ</div>
           </div>
         </div>
       )}

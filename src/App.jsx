@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAppState } from './useAppState';
+import { useIsMobile } from './useIsMobile';
 import { supabase } from './supabaseClient';
 import DashboardView from './components/DashboardView';
 import TodayView from './components/TodayView';
@@ -37,6 +38,7 @@ const navItems = [
 ];
 
 export default function App() {
+  const isMobile = useIsMobile();
   const [session, setSession] = useState(undefined);
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem('sidebarCollapsed') === '1'; } catch { return false; }
@@ -100,6 +102,7 @@ export default function App() {
 
   return (
     <div style={{ height: '100vh', width: '100%', background: '#0A0A11', display: 'flex', fontFamily: "'Noto Sans Lao',sans-serif", overflow: 'hidden', lineHeight: 1.7 }}>
+      {!isMobile && (
       <div style={{ width: collapsed ? 72 : 246, flexShrink: 0, background: '#14141F', borderRight: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column', padding: collapsed ? '22px 10px' : '22px 14px', position: 'relative', transition: 'width .18s ease, padding .18s ease' }}>
         <div
           onClick={toggleCollapsed}
@@ -140,12 +143,13 @@ export default function App() {
           )}
         </div>
       </div>
+      )}
 
       <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <div style={{ padding: '26px 40px 18px', borderBottom: '1px solid rgba(255,255,255,.06)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
-          <div style={{ fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, fontSize: 23, color: '#F1EFEA', letterSpacing: '.01em', flexShrink: 0 }}>{vm.tabTitle}</div>
+        <div style={{ padding: isMobile ? '16px 16px 12px' : '26px 40px 18px', borderBottom: '1px solid rgba(255,255,255,.06)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: isMobile ? 10 : 20, flexWrap: 'wrap' }}>
+          <div style={{ fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, fontSize: isMobile ? 19 : 23, color: '#F1EFEA', letterSpacing: '.01em', flexShrink: 0 }}>{vm.tabTitle}</div>
           {vm.tabIsPlanner && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16, flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div onClick={vm.prevWeek} style={{ width: 32, height: 32, borderRadius: 10, background: '#1B1B29', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                   <svg width="7" height="12" viewBox="0 0 7 12"><path d="M6 1L1 6l5 5" stroke="#8B899C" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -164,15 +168,26 @@ export default function App() {
           )}
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, overflowY: vm.tabIsPlanner ? 'hidden' : 'auto', padding: '24px 40px 40px', display: 'flex', flexDirection: 'column' }}>
-          {vm.tabIsDashboard && <DashboardView vm={vm} />}
-          {vm.tabIsToday && <TodayView vm={vm} />}
-          {vm.tabIsCategories && <CategoriesView vm={vm} />}
-          {vm.tabIsPlanner && <PlannerView vm={vm} />}
-          {vm.tabIsPriority && <PriorityView vm={vm} />}
-          {vm.tabIsWorkout && <WorkoutView vm={vm} />}
+        <div style={{ flex: 1, minHeight: 0, overflowY: vm.tabIsPlanner ? 'hidden' : 'auto', padding: isMobile ? '14px 14px 84px' : '24px 40px 40px', display: 'flex', flexDirection: 'column' }}>
+          {vm.tabIsDashboard && <DashboardView vm={vm} isMobile={isMobile} />}
+          {vm.tabIsToday && <TodayView vm={vm} isMobile={isMobile} />}
+          {vm.tabIsCategories && <CategoriesView vm={vm} isMobile={isMobile} />}
+          {vm.tabIsPlanner && <PlannerView vm={vm} isMobile={isMobile} />}
+          {vm.tabIsPriority && <PriorityView vm={vm} isMobile={isMobile} />}
+          {vm.tabIsWorkout && <WorkoutView vm={vm} isMobile={isMobile} />}
         </div>
       </div>
+
+      {isMobile && (
+        <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, background: '#14141F', borderTop: '1px solid rgba(255,255,255,.06)', display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)', zIndex: 40 }}>
+          {navItems.map((item) => (
+            <div key={item.key} onClick={vm[item.go]} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '8px 2px', cursor: 'pointer' }}>
+              {item.icon(vm.navColors[item.key])}
+              <div style={{ color: vm.navColors[item.key], fontSize: 9.5, fontWeight: 600, textAlign: 'center', lineHeight: 1.15 }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

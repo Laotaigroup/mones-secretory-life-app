@@ -1,4 +1,4 @@
-export default function DashboardView({ vm }) {
+export default function DashboardView({ vm, isMobile }) {
   return (
     <>
       <div style={{ color: '#9C99AE', fontSize: 13, marginBottom: 14 }}>{vm.todayLabel}</div>
@@ -9,9 +9,9 @@ export default function DashboardView({ vm }) {
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: 20, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '400px 1fr', gap: 20, alignItems: 'start' }}>
         <div style={{ background: '#1B1B29', borderRadius: 24, padding: '20px 8px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <svg width="340" height="340" viewBox="0 0 340 340">
+          <svg width="100%" height="auto" viewBox="0 0 340 340" style={{ maxWidth: 340 }}>
             {vm.starSpokes.map((sp, i) => (
               <line key={i} x1={sp.x1} y1={sp.y1} x2={sp.x2} y2={sp.y2} stroke="rgba(255,255,255,.08)" strokeWidth="1.5" />
             ))}

@@ -512,6 +512,7 @@ export function useAppState(userId) {
           openEdit: (e) => { e.stopPropagation(); patch({ editingBlockIid: inst.iid }); },
           closeEdit: (e) => { e.stopPropagation(); patch({ editingBlockIid: null }); },
           deleteBlock: (e) => { e.stopPropagation(); deleteInstance(inst.iid); },
+          unscheduleBlock: (e) => { e.stopPropagation(); unscheduleInstance(inst.iid, diso); },
           stopProp: (e) => { e.stopPropagation(); },
           onTimeInput: (e) => { setTimeOverride(inst.iid, e.target.value); },
           onEndTimeInput: (e) => {
@@ -599,10 +600,15 @@ export function useAppState(userId) {
       });
     });
     function makeItem(it) {
+      const moveOptions = PRIORITY_QUADRANTS.map((qd) => ({
+        id: qd.id, color: qd.color, stars: '★'.repeat(qd.stars), active: it.quadrant === qd.id,
+        select: () => setPriority(it.iid, qd.id),
+      })).concat([{ id: null, color: '#66637A', stars: '✕', active: !it.quadrant, select: () => setPriority(it.iid, null) }]);
       return {
         iid: it.iid, name: it.name, color: it.color, dayLabel: it.dayLabel, timeRange: it.timeRange,
         metaLabel: it.timeRange ? (it.dayLabel + ' · ' + it.timeRange) : it.dayLabel,
         dragStart: (e) => { e.dataTransfer.setData('text/plain', it.iid); },
+        moveOptions,
       };
     }
     const priorityTray = allPlannerItems.filter((it) => !it.quadrant).map(makeItem);

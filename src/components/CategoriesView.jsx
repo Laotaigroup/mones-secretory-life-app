@@ -1,9 +1,9 @@
-export default function CategoriesView({ vm }) {
+export default function CategoriesView({ vm, isMobile }) {
   if (vm.categoryListOpen) {
     return (
       <>
         <div style={{ color: '#9C99AE', fontSize: 13, marginBottom: 14 }}>ກົດເພື່ອເບິ່ງລາຍລະອຽດ ແລະ ປະຫວັດ</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? 150 : 200}px, 1fr))`, gap: isMobile ? 10 : 16 }}>
           {vm.catStats.map((cat) => (
             <div key={cat.id} onClick={cat.openDetail} style={{ background: '#1B1B29', borderRadius: 20, padding: 16, cursor: 'pointer' }}>
               <div style={{ width: 36, height: 36, borderRadius: 11, background: cat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Prompt','Noto Sans Lao',sans-serif", fontWeight: 700, color: '#14141F', fontSize: 15 }}>{cat.letter}</div>
